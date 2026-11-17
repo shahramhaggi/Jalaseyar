@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>جلسه‌یار</title>
+<style>
+:root{--bg:#f2f7f6;--card:#fff;--tx:#10312d;--mut:#5d7a76;--pri:#0f766e;--pri2:#14b8a6;--red:#dc2626;--line:#d6e4e2;--warn:#b45309}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1716;--card:#13292700;--card:#132927;--tx:#e6f4f1;--mut:#8fb0ab;--line:#244541;--pri:#14b8a6;--pri2:#0f766e}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:Tahoma,"Vazirmatn",system-ui,sans-serif;font-size:16px}
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.view{display:none;min-height:100%;padding:14px 14px 90px}.view.on{display:block}
+header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+header h1{font-size:20px;margin:0;flex:1}
+.ib{border:0;background:var(--card);color:var(--tx);width:42px;height:42px;border-radius:14px;font-size:20px;box-shadow:0 1px 3px #0002}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px #0002}
+.mt{display:flex;gap:10px;align-items:center}.mt .t{flex:1;min-width:0}
+.mt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{color:var(--mut);font-size:13px}
+.badge{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--tx)}
+.badge.ok{background:#16a34a33;color:#16a34a}.badge.err{background:#dc262633;color:var(--red)}.badge.wk{background:#f59e0b33;color:var(--warn)}
+.fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);height:64px;padding:0 28px;border:0;border-radius:32px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-size:18px;font-weight:bold;box-shadow:0 6px 18px #0f766e66;display:flex;align-items:center;gap:10px}
+.btn{border:0;border-radius:12px;padding:12px 16px;background:var(--pri);color:#fff;font-size:15px;font-family:inherit}
+.btn.sec{background:var(--card);color:var(--tx);border:1px solid var(--line)}.btn.red{background:var(--red)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+input,select,textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit}
+label{display:block;margin:12px 0 4px;font-size:14px;color:var(--mut)}
+.timer{font-size:56px;text-align:center;font-weight:bold;direction:ltr;margin:22px 0 6px;letter-spacing:2px}
+.bars{display:flex;gap:4px;height:70px;align-items:center;justify-content:center;direction:ltr}
+.bars i{width:7px;background:var(--pri2);border-radius:4px;height:6px;transition:height .15s}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--red);animation:bl 1s infinite;margin-inline-end:6px}
+@keyframes bl{50%{opacity:.2}}
+.stopb{display:block;margin:26px auto;width:96px;height:96px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:34px;box-shadow:0 6px 18px #dc262655}
+.tabs{display:flex;gap:6px;margin:6px 0 12px}.tabs button{flex:1;padding:10px;border:0;border-radius:12px;background:var(--card);color:var(--tx);font:inherit}
+.tabs button.on{background:var(--pri);color:#fff}
+.doc h2{font-size:18px;color:var(--pri);margin:16px 0 6px}.doc h3{font-size:16px;margin:12px 0 4px}
+.doc p{line-height:1.9;margin:6px 0}.doc li{line-height:1.9}
+.tr{white-space:pre-wrap;line-height:2}
+.prog{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:10px 0}.prog i{display:block;height:100%;background:var(--pri2);width:0}
+.msg{background:#f59e0b22;border-radius:12px;padding:10px;margin:8px 0;font-size:14px}
+.msg.err{background:#dc262622;color:var(--red)}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:12px;display:none;z-index:9;max-width:88%;text-align:center}
+#printArea{display:none}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important;color:#000;background:#fff;padding:10mm;direction:rtl;font-family:Tahoma,sans-serif}#printArea h1{font-size:22px}#printArea h2{font-size:17px;margin-top:14px}#printArea p,#printArea li{line-height:1.8}html,body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div id="v-home" class="view on">
+  <header><h1>🎙️ جلسه‌یار</h1><button class="ib" onclick="go('set')">⚙️</button></header>
+  <div id="list"></div>
+  <button class="fab" onclick="startRec()">🎙️ شروع ضبط جلسه</button>
+  <div id="impBox" class="row" style="display:none;justify-content:center"><label class="btn sec" style="margin:0;color:var(--tx)">📁 انتخاب فایل صوتی (آزمایش)<input type="file" accept="audio/*,video/mp4" style="display:none" onchange="importAudio(this.files[0])"></label></div>
+</div>
+
+<div id="v-rec" class="view">
+  <header><h1><span class="dot"></span>در حال ضبط</h1></header>
+  <div class="timer" id="tm">00:00:00</div>
+  <div class="bars" id="bars"></div>
+  <div class="sub" style="text-align:center;margin-top:8px">ضبط با خاموش‌شدن صفحه هم ادامه دارد</div>
+  <button class="stopb" onclick="stopRec()">⏹</button>
+  <div class="sub" style="text-align:center">برای پایان ضبط لمس کنید</div>
+</div>
+
+<div id="v-det" class="view">
+  <header><button class="ib" onclick="go('home')">➜</button><h1 id="dTitle"></h1><button class="ib" onclick="renameM()">✏️</button></header>
+  <div id="dStat"></div>
+  <div class="tabs"><button data-t="min" class="on">صورتجلسه</button><button data-t="tr">متن کامل</button><button data-t="au">ضبط</button></div>
+  <div id="dBody"></div>
+</div>
+
+<div id="v-set" class="view">
+  <header><button class="ib" onclick="go('home')">➜</button><h1>تنظیمات</h1></header>
+  <div class="card">
+    <label>سرویس هوش مصنوعی</label>
+    <select id="s_prov" onchange="saveSet()"><option value="gemini">Google Gemini (رایگان، پیشنهادی)</option><option value="groq">Groq (رایگان، سریع)</option></select>
+    <div id="s_g">
+      <label>کلید API گوگل (از aistudio.google.com)</label><input id="s_gk" type="password" dir="ltr" onchange="saveSet()">
+      <label>مدل</label><input id="s_gm" dir="ltr" onchange="saveSet()">
+    </div>
+    <div id="s_q">
+      <label>کلید API گروق (از console.groq.com)</label><input id="s_qk" type="password" dir="ltr" onchange="saveSet()">
+      <label>مدل تبدیل گفتار</label><input id="s_qt" dir="ltr" onchange="saveSet()">
+      <label>مدل صورتجلسه</label><input id="s_qc" dir="ltr" onchange="saveSet()">
+    </div>
+    <div class="row"><button class="btn sec" onclick="listModels()">آزمایش کلید و فهرست مدل‌ها</button></div>
+    <div id="s_models" class="sub" dir="ltr" style="white-space:pre-wrap"></div>
+    <label>زبان گفتار</label>
+    <select id="s_lang" onchange="saveSet()"><option value="fa">فارسی (گاهی انگلیسی)</option><option value="en">انگلیسی</option><option value="auto">تشخیص خودکار</option></select>
+    <label>طول هر بخش ضبط (دقیقه)</label>
+    <select id="s_seg" onchange="saveSet()"><option>5</option><option>10</option><option>15</option><option>20</option></select>
+  </div>
+  <div class="msg">توجه: در سطح رایگان گوگل ممکن است داده‌ها برای بهبود سرویس استفاده شوند؛ برای جلسات محرمانه از سطح پولی یا روش دیگر استفاده کنید. کلیدها فقط در همین گوشی ذخیره می‌شوند.</div>
+</div>
+
+<div id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',3200)}
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const pad=n=>String(n).padStart(2,'0');
+const hms=s=>pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(Math.floor(s%60));
+const fdate=t=>{try{return new Date(t).toLocaleString('fa-IR',{dateStyle:'medium',timeStyle:'short'})}catch(e){return new Date(t).toLocaleString()}};
+
+/* ---------- native bridge (+ browser mock for tests) ---------- */
+const JN={_p:{},_n:0,
+ _cb(id,ok,payload){const p=this._p[id];if(!p)return;delete this._p[id];ok?p.res(payload):p.rej(new Error(payload))},
+ call(m,...a){return new Promise((res,rej)=>{const id='c'+(++this._n);this._p[id]={res,rej};try{window.JalaseNative[m](id,...a)}catch(e){delete this._p[id];rej(e)}})}};
+window.JN=JN;
+
+/* ---------- real browser backend (used when not inside the Android app) ---------- */
+const WebBack=(()=>{
+ const SR=16000,store=new Map();let stream,ctx,node,src,chunks=[],cur,t0=0,amp=0,segLen=300,rec=false,idx=0,sess='';
+ const wav=f=>{const b=new ArrayBuffer(44+f.length*2),v=new DataView(b),w=(o,t)=>[...t].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+  w(0,'RIFF');v.setUint32(4,36+f.length*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,SR,true);v.setUint32(28,SR*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,f.length*2,true);
+  for(let i=0;i<f.length;i++){const x=Math.max(-1,Math.min(1,f[i]));v.setInt16(44+i*2,x<0?x*0x8000:x*0x7FFF,true)}return new Blob([b],{type:'audio/wav'})};
+ const flat=a=>{let n=0;a.forEach(x=>n+=x.length);const o=new Float32Array(n);let k=0;a.forEach(x=>{o.set(x,k);k+=x.length});return o};
+ const cut=()=>{if(!cur.length)return;idx++;const n='seg_'+String(idx).padStart(3,'0')+'.wav';store.get(sess).push({name:n,blob:wav(flat(cur))});cur=[]};
+ const b64=blob=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(blob)});
+ const get=(s,n)=>(store.get(s)||[]).find(x=>x.name===n);
+ async function http(url,opt){for(let a=1;;a++){const r=await fetch(url,opt),t=await r.text();if((r.status===429||r.status>=500)&&a<4){await new Promise(z=>setTimeout(z,4000*a));continue}
+  if(!r.ok){let m=t;try{m=JSON.parse(t).error.message}catch(e){}throw new Error('خطای سرویس ('+r.status+'): '+String(m).slice(0,300))}return JSON.parse(t)}}
+ const gtext=async(k,m,body)=>{const j=await http('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',headers:{'x-goog-api-key':k,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const c=j.candidates&&j.candidates[0];if(!c||!c.content)throw new Error('پاسخی دریافت نشد');return (c.content.parts||[]).map(p=>p.text||'').join('')};
+ const run=(id,fn)=>fn().then(r=>JN._cb(id,true,r),e=>JN._cb(id,false,e.message||String(e)));
+ return{
+  requestPermissions(id){run(id,async()=>{if(!navigator.mediaDevices||!window.isSecureContext)throw new Error('مرورگر در این حالت اجازهٔ میکروفون نمی‌دهد. صفحه باید با آدرس https باز شود (نه از فایل). فعلاً از «انتخاب فایل صوتی» استفاده کنید.');try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){throw new Error('دسترسی به میکروفون رد شد. روی آیکن قفل کنار آدرس بزنید و میکروفون را مجاز کنید.')}return ''})},
+  startRecording(sid,fmt,seg){if(!stream)return false;sess=sid;store.set(sid,[]);idx=0;cur=[];segLen=Math.min(seg,300);t0=Date.now();rec=true;
+   ctx=new AudioContext({sampleRate:SR});src=ctx.createMediaStreamSource(stream);node=ctx.createScriptProcessor(4096,1,1);
+   node.onaudioprocess=e=>{if(!rec)return;const d=new Float32Array(e.inputBuffer.getChannelData(0));cur.push(d);let m=0;for(let i=0;i<d.length;i+=16)m=Math.max(m,Math.abs(d[i]));amp=m*20000;
+    if(cur.reduce((a,x)=>a+x.length,0)>=segLen*SR)cut()};
+   src.connect(node);node.connect(ctx.destination);return true},
+  recState(){return JSON.stringify({rec,sec:rec?Math.floor((Date.now()-t0)/1000):0,seg:idx,amp,session:sess})},
+  stopRecording(){const secs=rec?Math.floor((Date.now()-t0)/1000):0;rec=false;try{node.disconnect();src.disconnect();ctx.close()}catch(e){}cut();
+   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}return JSON.stringify({files:store.get(sess).map(x=>x.name),seconds:secs})},
+  deleteSession(s){store.delete(s)},
+  async importFile(file){const buf=await file.arrayBuffer();const dec=await new AudioContext().decodeAudioData(buf);
+   const off=new OfflineAudioContext(1,Math.ceil(dec.duration*SR),SR);const bs=off.createBufferSource();bs.buffer=dec;bs.connect(off.destination);bs.start();
+   const pcm=(await off.startRendering()).getChannelData(0);const sid='s'+Date.now();const arr=[];store.set(sid,arr);const L=300*SR;
+   for(let i=0,n=1;i<pcm.length;i+=L,n++)arr.push({name:'seg_'+String(n).padStart(3,'0')+'.wav',blob:wav(pcm.slice(i,i+L))});
+   return{sid,files:arr.map(x=>x.name),seconds:Math.round(dec.duration)}},
+  transcribe(id,prov,k,m,lang,s,seg,prompt){run(id,async()=>{const f=get(s,seg);if(!f)throw new Error('فایل صوتی این بخش در مرورگر دیگر موجود نیست (با بستن صفحه پاک می‌شود)');
+   if(prov==='groq'){const fd=new FormData();fd.append('model',m);fd.append('response_format','json');fd.append('temperature','0');if(lang&&lang!=='auto')fd.append('language',lang);fd.append('file',f.blob,seg);
+    return (await http('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+k},body:fd})).text||''}
+   return gtext(k,m,{contents:[{role:'user',parts:[{text:prompt},{inline_data:{mime_type:'audio/wav',data:await b64(f.blob)}}]}],generationConfig:{temperature:0}})})},
+  generate(id,prov,k,m,sys,prompt){run(id,async()=>{
+   if(prov==='groq')return (await http('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({model:m,temperature:0.2,response_format:{type:'json_object'},messages:[{role:'system',content:sys},{role:'user',content:prompt}]})})).choices[0].message.content;
+   return gtext(k,m,{systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.2,responseMimeType:'application/json'}})})},
+  listModels(id,prov,k){run(id,async()=>{if(prov==='groq')return JSON.stringify((await http('https://api.groq.com/openai/v1/models',{headers:{Authorization:'Bearer '+k}})).data.map(x=>x.id));
+   return JSON.stringify((await http('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':k}})).models.filter(x=>JSON.stringify(x).includes('generateContent')).map(x=>x.name.replace('models/','')))})},
+  shareFile(n,m,b){const a=document.createElement('a');a.href='data:'+m+';base64,'+b;a.download=n;a.click();return true},
+  shareText(t,x){if(navigator.share)navigator.share({title:t,text:x}).catch(()=>{});else navigator.clipboard&&navigator.clipboard.writeText(x).then(()=>toast('متن کپی شد'));return true},
+  printPage(){window.print();return true}};
+})();
+if(!window.JalaseNative&&!/mock/.test(location.search))window.JalaseNative=WebBack;
+if(!window.JalaseNative){
+ let rec=false,t0=0,files=[];
+ window.JalaseNative={
+  _a(id,ok,p,ms){setTimeout(()=>JN._cb(id,ok,p),ms||400)},
+  requestPermissions(id){this._a(id,true,'')},
+  startRecording(){rec=true;t0=Date.now();return true},
+  recState(){return JSON.stringify({rec,sec:Math.floor((Date.now()-t0)/1000),seg:1,amp:Math.random()*20000,session:''})},
+  stopRecording(){rec=false;return JSON.stringify({files:['seg_001.aac','seg_002.aac'],seconds:Math.floor((Date.now()-t0)/1000)+3600})},
+  deleteSession(){},
+  transcribe(id,p,k,m,l,s,seg){this._a(id,true,'این بخش '+seg+' از جلسه است. آقای احمدی گزارش فروش را ارائه کرد و قرار شد تا پایان هفته پیش‌نویس قرارداد نهایی شود. خانم رضایی مسئول پیگیری بودجه شد.',600)},
+  generate(id,p,k,m,sys,prompt){this._a(id,true,JSON.stringify({title:'جلسه بررسی فروش',summary:'گزارش فروش ارائه و دربارهٔ قرارداد و بودجه تصمیم‌گیری شد.',topics:[{title:'گزارش فروش',points:['رشد فروش ماه گذشته','نیاز به بازنگری هدف‌ها']},{title:'بودجه',points:['بودجهٔ سه‌ماههٔ بعد بررسی شد']}],decisions:['قرارداد تا پایان هفته نهایی شود'],actions:[{task:'نهایی‌کردن پیش‌نویس قرارداد',owner:'آقای احمدی',due:'پایان هفته'},{task:'پیگیری بودجه',owner:'خانم رضایی',due:''}],participants:['آقای احمدی','خانم رضایی'],open_questions:['تاریخ جلسهٔ بعد مشخص نشد']}),700)},
+  listModels(id,p,k){this._a(id,true,JSON.stringify(['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash']))},
+  shareFile(n,m,b){const a=document.createElement('a');a.href='data:'+m+';base64,'+b;a.download=n;a.click();window.__shared={n,m,len:b.length};return true},
+  shareText(t,x){window.__sharedText=x;return true},
+  printPage(n){window.__printed=n;return true}
+ };
+}
+
+/* ---------- settings ---------- */
+const DEF={prov:'gemini',gk:'',gm:'gemini-3.8-flash',qk:'',qt:'whisper-large-v3',qc:'llama-3.3-70b-versatile',lang:'fa',seg:'10'};
+let S=Object.assign({},DEF,store.get('jl_set',{}));
+if(/^gemini-(2\.5|2\.0|1\.5)/.test(S.gm)){S.gm=DEF.gm;store.set('jl_set',S)}
+function loadSet(){$('#s_prov').value=S.prov;$('#s_gk').value=S.gk;$('#s_gm').value=S.gm;$('#s_qk').value=S.qk;$('#s_qt').value=S.qt;$('#s_qc').value=S.qc;$('#s_lang').value=S.lang;$('#s_seg').value=S.seg;showProv()}
+function showProv(){$('#s_g').style.display=S.prov==='gemini'?'block':'none';$('#s_q').style.display=S.prov==='groq'?'block':'none'}
+function saveSet(){S={prov:$('#s_prov').value,gk:$('#s_gk').value.trim(),gm:$('#s_gm').value.trim()||DEF.gm,qk:$('#s_qk').value.trim(),qt:$('#s_qt').value.trim()||DEF.qt,qc:$('#s_qc').value.trim()||DEF.qc,lang:$('#s_lang').value,seg:$('#s_seg').value};store.set('jl_set',S);showProv()}
+const key=()=>S.prov==='groq'?S.qk:S.gk;
+async function listModels(){saveSet();if(!key())return toast('ابتدا کلید API را وارد کنید');
+ $('#s_models').textContent='در حال بررسی…';
+ try{const r=JSON.parse(await JN.call('listModels',S.prov,key()));$('#s_models').textContent='✓ کلید معتبر است. مدل‌ها:\n'+r.join('\n')}catch(e){$('#s_models').textContent='✗ '+e.message}}
+
+/* ---------- navigation ---------- */
+let cur='home',curId=null,tab='min';
+function go(v,id){if(v==='det'&&id)curId=id;cur=v;document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+ if(v==='home')renderList();if(v==='det')renderDet();if(v==='set')loadSet();window.scrollTo(0,0)}
+try{const A=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
+ if(A)A.addListener('backButton',()=>{if(cur==='rec')return toast('ابتدا ضبط را پایان دهید');if(cur!=='home')go('home');else A.exitApp()})}catch(e){}
+
+/* ---------- data ---------- */
+let M=store.get('jl_m',[]);
+const save=()=>store.set('jl_m',M);
+const getM=id=>M.find(m=>m.id===id);
+function statusBadge(m){if(m.busy)return '<span class="badge wk">در حال پردازش</span>';if(m.minutes)return '<span class="badge ok">صورتجلسه آماده</span>';if(m.error)return '<span class="badge err">خطا</span>';if(m.segs.every(s=>s.text!=null))return '<span class="badge wk">متن آماده</span>';return '<span class="badge">پردازش‌نشده</span>'}
+function renderList(){const l=$('#list');
+ if(!M.length){l.innerHTML='<div class="card" style="text-align:center"><p>هنوز جلسه‌ای ضبط نشده.</p><p class="sub">ابتدا از ⚙️ کلید API رایگان را وارد کنید، سپس دکمهٔ ضبط را بزنید.</p></div>';return}
+ l.innerHTML=M.slice().sort((a,b)=>b.date-a.date).map(m=>`<div class="card" onclick="go('det','${m.id}')"><div class="mt"><div class="t"><b>${esc(m.title)}</b><span class="sub">${fdate(m.date)} · ${hms(m.seconds||0)}</span></div>${statusBadge(m)}</div></div>`).join('')}
+
+/* ---------- recording ---------- */
+let poll=null,sess=null;
+function mkBars(){const b=$('#bars');if(!b.children.length)for(let i=0;i<24;i++)b.appendChild(document.createElement('i'))}
+async function startRec(){
+ try{await JN.call('requestPermissions')}catch(e){return toast(e.message||'دسترسی میکروفون لازم است')}
+ sess='s'+Date.now();
+ if(!JalaseNative.startRecording(sess,S.prov==='groq'?'m4a':'aac',parseInt(S.seg)*60))return toast('شروع ضبط ممکن نشد');
+ mkBars();go('rec');beginPoll()}
+function beginPoll(){clearInterval(poll);const lv=[];poll=setInterval(()=>{let s;try{s=JSON.parse(JalaseNative.recState())}catch(e){return}
+ $('#tm').textContent=hms(s.sec);lv.push(Math.min(1,(s.amp||0)/12000));if(lv.length>24)lv.shift();
+ [...$('#bars').children].forEach((b,i)=>{const v=lv[lv.length-24+i]||0;b.style.height=(6+v*60)+'px'})},400)}
+async function stopRec(){clearInterval(poll);
+ const r=JSON.parse(JalaseNative.stopRecording());
+ if(!r.files.length){toast('چیزی ضبط نشد');return go('home')}
+ const m={id:sess||('s'+Date.now()),title:'جلسه '+fdate(Date.now()),date:Date.now(),seconds:r.seconds,fmt:S.prov==='groq'?'m4a':'aac',segs:r.files.map(f=>({name:f,text:null})),minutes:null,error:''};
+ M.push(m);save();go('det',m.id);
+ if(key())process(m);else toast('برای ساخت صورتجلسه، کلید API را در تنظیمات وارد کنید')}
+(function resume(){try{const s=JSON.parse(JalaseNative.recState());if(s.rec){sess=s.session;mkBars();go('rec');beginPoll()}}catch(e){}})();
+
+/* ---------- AI pipeline ---------- */
+const LANGN={fa:'فارسی (گاهی انگلیسی)',en:'انگلیسی',auto:'فارسی یا انگلیسی'};
+function txPrompt(){return 'این فایل صوتی بخشی از یک جلسهٔ کاری است و زبان آن عمدتاً '+LANGN[S.lang]+' است. دقیقاً آنچه گفته می‌شود را به متن تبدیل کن، با نگارش درست فارسی و علائم نگارشی. اگر گوینده‌ها قابل تشخیص‌اند، با «گوینده ۱:» و «گوینده ۲:» جدا کن. فقط متن را بنویس، بدون توضیح اضافه. اگر گفتاری وجود نداشت، پاسخ خالی بده.'}
+const SYS='تو دبیر حرفه‌ای جلسه هستی. فقط یک شیء JSON معتبر برگردان و هیچ متن دیگری ننویس. همهٔ مقدارها فارسی باشند. چیزی را از خودت اضافه نکن؛ اگر اطلاعاتی در متن نیست، آرایه یا رشتهٔ خالی بگذار.';
+const SCHEMA='{"title":"عنوان کوتاه جلسه","summary":"خلاصهٔ چند جمله‌ای","topics":[{"title":"موضوع","points":["نکته"]}],"decisions":["تصمیم"],"actions":[{"task":"کار","owner":"مسئول","due":"مهلت"}],"participants":["نام"],"open_questions":["موضوع باز"]}';
+function parseJ(t){t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('پاسخ هوش مصنوعی قابل خواندن نبود')}}
+function chunks(text,lim){const out=[];let i=0;while(i<text.length){let e=Math.min(text.length,i+lim);if(e<text.length){const k=text.lastIndexOf('\n',e);if(k>i+lim*0.6)e=k}out.push(text.slice(i,e));i=e}return out}
+const gen=(sys,p)=>JN.call('generate',S.prov,key(),S.prov==='groq'?S.qc:S.gm,sys,p);
+function setBusy(m,txt,pct){m.busy=true;m.step=txt;m.pct=pct;if(cur==='det'&&curId===m.id)renderStat()}
+async function process(m){
+ if(m.busy)return;if(!key())return toast('ابتدا کلید API را در تنظیمات وارد کنید');
+ m.busy=true;m.error='';save();renderDet();
+ try{
+  const n=m.segs.length;
+  for(let i=0;i<n;i++){const s=m.segs[i];if(s.text!=null)continue;
+   setBusy(m,`تبدیل گفتار به متن (بخش ${i+1} از ${n})`,i/n*70);
+   s.text=await JN.call('transcribe',S.prov,key(),S.prov==='groq'?S.qt:S.gm,S.lang,m.id,s.name,txPrompt());save()}
+  m.transcript=m.segs.map(s=>s.text.trim()).filter(Boolean).join('\n\n');
+  if(!m.transcript){throw new Error('در ضبط گفتاری تشخیص داده نشد')}
+  setBusy(m,'ساخت صورتجلسه',72);
+  const lim=S.prov==='groq'?9000:60000;const cs=chunks(m.transcript,lim);let mins;
+  if(cs.length===1){mins=parseJ(await gen(SYS,'متن جلسه:\n'+m.transcript+'\n\nاز این متن صورتجلسه بساز و دقیقاً با این ساختار JSON برگردان:\n'+SCHEMA))}
+  else{const parts=[];for(let i=0;i<cs.length;i++){setBusy(m,`خلاصه‌سازی بخش ${i+1} از ${cs.length}`,72+i/cs.length*18);
+    parts.push(parseJ(await gen(SYS,'این بخشی از یک جلسه است. موضوعات، تصمیم‌ها، اقدام‌ها و نام‌ها را با همین ساختار JSON استخراج کن:\n'+SCHEMA+'\n\nمتن:\n'+cs[i])))}
+   setBusy(m,'تجمیع نهایی',92);
+   mins=parseJ(await gen(SYS,'این خلاصه‌های بخش‌های پشت‌سرهم یک جلسه است. آنها را در یک صورتجلسهٔ واحد ادغام کن، موارد تکراری را حذف و با همین ساختار JSON برگردان:\n'+SCHEMA+'\n\n'+JSON.stringify(parts)))}
+  m.minutes=mins;if(mins.title&&/^جلسه \d|^جلسه /.test(m.title)&&m.title===m.autoTitle||!m.autoTitle){if(mins.title){m.title=mins.title;m.autoTitle=mins.title}}
+ }catch(e){m.error=e.message||String(e)}
+ m.busy=false;m.step='';save();if(cur==='det'&&curId===m.id)renderDet();else if(cur==='home')renderList()}
+function retryM(){const m=getM(curId);m.minutes=null;process(m)}
+function regenM(){const m=getM(curId);m.minutes=null;process(m)}
+function redoAll(){const m=getM(curId);if(!confirm('متن همهٔ بخش‌ها دوباره از صدا ساخته شود؟'))return;m.segs.forEach(s=>s.text=null);m.minutes=null;m.transcript='';process(m)}
+
+/* ---------- detail ---------- */
+function renameM(){const m=getM(curId);const t=prompt('عنوان جلسه',m.title);if(t&&t.trim()){m.title=t.trim();m.autoTitle='';save();renderDet()}}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderDet()});
+function renderStat(){const m=getM(curId);if(!m)return;let h='';
+ if(m.busy)h+=`<div class="card"><b>${esc(m.step||'در حال پردازش…')}</b><div class="prog"><i style="width:${m.pct||5}%"></i></div><div class="sub">برنامه را باز نگه دارید تا پردازش تمام شود</div></div>`;
+ if(m.error)h+=`<div class="msg err">${esc(m.error)}</div><div class="row"><button class="btn" onclick="retryM()">تلاش دوباره (ادامه از همان‌جا)</button></div>`;
+ $('#dStat').innerHTML=h}
+function blocks(m){const b=[],x=m.minutes;if(!x)return b;
+ b.push({t:'h1',s:m.title});b.push({t:'p',s:'تاریخ: '+fdate(m.date)+' | مدت: '+hms(m.seconds||0)});
+ if(x.participants&&x.participants.length)b.push({t:'p',s:'حاضران: '+x.participants.join('، ')});
+ if(x.summary){b.push({t:'h2',s:'خلاصه'});b.push({t:'p',s:x.summary})}
+ if(x.topics&&x.topics.length){b.push({t:'h2',s:'موضوعات مطرح‌شده'});x.topics.forEach(t=>{b.push({t:'h3',s:t.title});(t.points||[]).forEach(p=>b.push({t:'li',s:p}))})}
+ if(x.decisions&&x.decisions.length){b.push({t:'h2',s:'تصمیم‌ها'});x.decisions.forEach(d=>b.push({t:'li',s:d}))}
+ if(x.actions&&x.actions.length){b.push({t:'h2',s:'اقدام‌ها'});x.actions.forEach(a=>b.push({t:'li',s:a.task+(a.owner?' — مسئول: '+a.owner:'')+(a.due?' — مهلت: '+a.due:'')}))}
+ if(x.open_questions&&x.open_questions.length){b.push({t:'h2',s:'موارد باز'});x.open_questions.forEach(d=>b.push({t:'li',s:d}))}
+ return b}
+function blocksHtml(bs){let h='',ul=false;for(const k of bs){if(k.t!=='li'&&ul){h+='</ul>';ul=false}
+ if(k.t==='li'){if(!ul){h+='<ul>';ul=true}h+='<li>'+esc(k.s)+'</li>'}else h+=`<${k.t==='h1'?'h1':k.t}>${esc(k.s)}</${k.t==='h1'?'h1':k.t}>`}
+ if(ul)h+='</ul>';return h}
+function renderDet(){const m=getM(curId);if(!m){return go('home')}
+ $('#dTitle').textContent=m.title;renderStat();
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+ let h='';
+ if(tab==='min'){
+  if(m.minutes){h=`<div class="card doc">${blocksHtml(blocks(m))}</div>
+   <div class="row"><button class="btn" onclick="exportDocx()">📄 Word</button><button class="btn" onclick="exportPdf()">📕 PDF</button><button class="btn sec" onclick="shareTxt()">اشتراک متن</button><button class="btn sec" onclick="regenM()">ساخت دوباره</button></div>`}
+  else if(!m.busy){h=`<div class="card"><p>صورتجلسه هنوز ساخته نشده.</p><div class="row"><button class="btn" onclick="retryM()">شروع پردازش</button></div></div>`}}
+ if(tab==='tr'){const t=m.transcript||m.segs.map(s=>s.text||'').join('\n\n').trim();
+  h=t?`<div class="card tr">${esc(t)}</div><div class="row"><button class="btn sec" onclick="shareTr()">اشتراک متن کامل</button><button class="btn sec" onclick="redoAll()">تبدیل دوباره از صدا</button></div>`:'<div class="card">متنی هنوز ساخته نشده.</div>'}
+ if(tab==='au'){h=`<div class="card"><p>فایل‌های صوتی در حافظهٔ برنامه نگهداری می‌شوند (${m.segs.length} بخش).</p><div class="row"><button class="btn red" onclick="delM()">حذف جلسه و صدا</button></div></div>`}
+ $('#dBody').innerHTML=h}
+function delM(){if(!confirm('این جلسه و فایل صوتی آن برای همیشه حذف شود؟'))return;try{JalaseNative.deleteSession(curId)}catch(e){}M=M.filter(x=>x.id!==curId);save();go('home')}
+function shareTr(){const m=getM(curId);JalaseNative.shareText(m.title,m.transcript||'')}
+function shareTxt(){const m=getM(curId);JalaseNative.shareText(m.title,blocks(m).map(k=>(k.t==='li'?'• ':k.t==='p'?'':'\n')+k.s).join('\n'))}
+
+/* ---------- Word export (minimal docx, no libraries) ---------- */
+const CT=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CT[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function zip(files){const enc=new TextEncoder(),loc=[],cen=[];let off=0;
+ const w16=(a,v)=>a.push(v&255,v>>8&255),w32=(a,v)=>a.push(v&255,v>>8&255,v>>16&255,v>>>24&255);
+ files.forEach(f=>{const n=enc.encode(f.name),d=enc.encode(f.data),c=crc(d);
+  const h=[];w32(h,0x04034b50);w16(h,20);w16(h,0x0800);w16(h,0);w16(h,0);w16(h,0x21);w32(h,c);w32(h,d.length);w32(h,d.length);w16(h,n.length);w16(h,0);
+  loc.push(new Uint8Array(h),n,d);
+  const e=[];w32(e,0x02014b50);w16(e,20);w16(e,20);w16(e,0x0800);w16(e,0);w16(e,0);w16(e,0x21);w32(e,c);w32(e,d.length);w32(e,d.length);w16(e,n.length);w16(e,0);w16(e,0);w16(e,0);w16(e,0);w32(e,0);w32(e,off);
+  cen.push(new Uint8Array(e),n);off+=h.length+n.length+d.length});
+ let cs=0;cen.forEach(x=>cs+=x.length);const z=[];w32(z,0x06054b50);w16(z,0);w16(z,0);w16(z,files.length);w16(z,files.length);w32(z,cs);w32(z,off);w16(z,0);
+ const parts=loc.concat(cen,[new Uint8Array(z)]);let tot=0;parts.forEach(p=>tot+=p.length);const out=new Uint8Array(tot);let o=0;parts.forEach(p=>{out.set(p,o);o+=p.length});return out}
+function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
+const X=s=>esc(s).replace(/"/g,'&quot;');
+function docx(bs){
+ const run=(s,o)=>`<w:r><w:rPr><w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Tahoma"/>${o.b?'<w:b/><w:bCs/>':''}<w:rtl/><w:color w:val="${o.c||'000000'}"/><w:sz w:val="${o.z}"/><w:szCs w:val="${o.z}"/></w:rPr><w:t xml:space="preserve">${X(s)}</w:t></w:r>`;
+ const para=(s,o)=>`<w:p><w:pPr><w:bidi/><w:spacing w:before="${o.sb||60}" w:after="${o.sa||60}"/>${o.jc?`<w:jc w:val="${o.jc}"/>`:''}</w:pPr>${run(s,o)}</w:p>`;
+ const body=bs.map(k=>k.t==='h1'?para(k.s,{b:1,z:40,c:'0F766E',sa:120,jc:'center'}):k.t==='h2'?para(k.s,{b:1,z:30,c:'0F766E',sb:240}):k.t==='h3'?para(k.s,{b:1,z:26,sb:120}):k.t==='li'?para('• '+k.s,{z:24}):para(k.s,{z:24})).join('');
+ const ns='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+ return zip([
+  {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
+  {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+  {name:'word/document.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${ns}><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/><w:bidi/></w:sectPr></w:body></w:document>`}])}
+function fname(m,ext){return (m.title||'meeting').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)+'.'+ext}
+function exportDocx(){const m=getM(curId);try{const ok=JalaseNative.shareFile(fname(m,'docx'),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',b64(docx(blocks(m))));if(!ok)toast('ساخت فایل ممکن نشد')}catch(e){toast('خطا: '+e.message)}}
+function exportPdf(){const m=getM(curId);$('#printArea').innerHTML=blocksHtml(blocks(m));toast('در پنجرهٔ چاپ، «ذخیره به‌صورت PDF» را انتخاب کنید');setTimeout(()=>JalaseNative.printPage(m.title),700)}
+
+if(JalaseNative===WebBack){$('#impBox').style.display='flex'}
+async function importAudio(f){if(!f)return;toast('در حال آماده‌سازی فایل…');try{const r=await WebBack.importFile(f);
+ const m={id:r.sid,title:f.name.replace(/\.[^.]+$/,''),date:Date.now(),seconds:r.seconds,fmt:'wav',segs:r.files.map(n=>({name:n,text:null})),minutes:null,error:''};
+ M.push(m);save();go('det',m.id);if(key())process(m);else toast('کلید API را در تنظیمات وارد کنید')}catch(e){toast('خواندن فایل ممکن نشد: '+e.message)}}
+renderList();loadSet();
+</script>
+</body>
+</html>
