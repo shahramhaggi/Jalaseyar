@@ -123,7 +123,7 @@ const WebBack=(()=>{
  const cut=()=>{if(!cur.length)return;idx++;const n='seg_'+String(idx).padStart(3,'0')+'.wav';store.get(sess).push({name:n,blob:wav(flat(cur))});cur=[]};
  const b64=blob=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(blob)});
  const get=(s,n)=>(store.get(s)||[]).find(x=>x.name===n);
- async function http(url,opt){for(let a=1;;a++){const r=await fetch(url,opt),t=await r.text();if((r.status===429||r.status>=500)&&a<4){await new Promise(z=>setTimeout(z,4000*a));continue}
+ async function http(url,opt){for(let a=1;;a++){const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),240000);let r,t;try{r=await fetch(url,Object.assign({signal:ac.signal},opt));t=await r.text()}catch(e){throw new Error(e.name==='AbortError'?'پاسخ سرویس بیش از ۴ دقیقه طول کشید (اینترنت یا حجم فایل). دوباره تلاش کنید.':'خطای شبکه: '+e.message)}finally{clearTimeout(tm)}if((r.status===429||r.status>=500)&&a<4){await new Promise(z=>setTimeout(z,4000*a));continue}
   if(!r.ok){let m=t;try{m=JSON.parse(t).error.message}catch(e){}throw new Error('خطای سرویس ('+r.status+'): '+String(m).slice(0,300))}return JSON.parse(t)}}
  const gtext=async(k,m,body)=>{const j=await http('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',headers:{'x-goog-api-key':k,'Content-Type':'application/json'},body:JSON.stringify(body)});
   const c=j.candidates&&j.candidates[0];if(!c||!c.content)throw new Error('پاسخی دریافت نشد');return (c.content.parts||[]).map(p=>p.text||'').join('')};
@@ -196,7 +196,7 @@ try{const A=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins
  if(A)A.addListener('backButton',()=>{if(cur==='rec')return toast('ابتدا ضبط را پایان دهید');if(cur!=='home')go('home');else A.exitApp()})}catch(e){}
 
 /* ---------- data ---------- */
-let M=store.get('jl_m',[]);
+let M=store.get('jl_m',[]);M.forEach(m=>{m.busy=false;m.step=''});
 const save=()=>store.set('jl_m',M);
 const getM=id=>M.find(m=>m.id===id);
 function statusBadge(m){if(m.busy)return '<span class="badge wk">در حال پردازش</span>';if(m.minutes)return '<span class="badge ok">صورتجلسه آماده</span>';if(m.error)return '<span class="badge err">خطا</span>';if(m.segs.every(s=>s.text!=null))return '<span class="badge wk">متن آماده</span>';return '<span class="badge">پردازش‌نشده</span>'}
@@ -231,15 +231,16 @@ const SCHEMA='{"title":"عنوان کوتاه جلسه","summary":"خلاصهٔ 
 function parseJ(t){t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();try{return JSON.parse(t)}catch(e){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(t.slice(a,b+1));throw new Error('پاسخ هوش مصنوعی قابل خواندن نبود')}}
 function chunks(text,lim){const out=[];let i=0;while(i<text.length){let e=Math.min(text.length,i+lim);if(e<text.length){const k=text.lastIndexOf('\n',e);if(k>i+lim*0.6)e=k}out.push(text.slice(i,e));i=e}return out}
 const gen=(sys,p)=>JN.call('generate',S.prov,key(),S.prov==='groq'?S.qc:S.gm,sys,p);
-function setBusy(m,txt,pct){m.busy=true;m.step=txt;m.pct=pct;if(cur==='det'&&curId===m.id)renderStat()}
+function setBusy(m,txt,pct){m.busy=true;m.step=txt;m.pct=pct;m.stepT=Date.now();if(cur==='det'&&curId===m.id)renderStat()}
 async function process(m){
- if(m.busy)return;if(!key())return toast('ابتدا کلید API را در تنظیمات وارد کنید');
- m.busy=true;m.error='';save();renderDet();
+ if(!key())return toast('ابتدا کلید API را در تنظیمات وارد کنید');
+ const g=m.gen=(m.gen||0)+1;const ok=()=>{if(m.gen!==g)throw 'stale'};
+ m.busy=true;m.error='';m.stepT=Date.now();save();renderDet();
  try{
   const n=m.segs.length;
   for(let i=0;i<n;i++){const s=m.segs[i];if(s.text!=null)continue;
    setBusy(m,`تبدیل گفتار به متن (بخش ${i+1} از ${n})`,i/n*70);
-   s.text=await JN.call('transcribe',S.prov,key(),S.prov==='groq'?S.qt:S.gm,S.lang,m.id,s.name,txPrompt());save()}
+   s.text=await JN.call('transcribe',S.prov,key(),S.prov==='groq'?S.qt:S.gm,S.lang,m.id,s.name,txPrompt());ok();save()}
   m.transcript=m.segs.map(s=>s.text.trim()).filter(Boolean).join('\n\n');
   if(!m.transcript){throw new Error('در ضبط گفتاری تشخیص داده نشد')}
   setBusy(m,'ساخت صورتجلسه',72);
@@ -250,9 +251,11 @@ async function process(m){
    setBusy(m,'تجمیع نهایی',92);
    mins=parseJ(await gen(SYS,'این خلاصه‌های بخش‌های پشت‌سرهم یک جلسه است. آنها را در یک صورتجلسهٔ واحد ادغام کن، موارد تکراری را حذف و با همین ساختار JSON برگردان:\n'+SCHEMA+'\n\n'+JSON.stringify(parts)))}
   m.minutes=mins;if(mins.title&&/^جلسه \d|^جلسه /.test(m.title)&&m.title===m.autoTitle||!m.autoTitle){if(mins.title){m.title=mins.title;m.autoTitle=mins.title}}
- }catch(e){m.error=e.message||String(e)}
- m.busy=false;m.step='';save();if(cur==='det'&&curId===m.id)renderDet();else if(cur==='home')renderList()}
+ }catch(e){if(e==='stale')return;m.error=e.message||String(e)}
+ if(m.gen!==g)return;m.busy=false;m.step='';save();if(cur==='det'&&curId===m.id)renderDet();else if(cur==='home')renderList()}
 function retryM(){const m=getM(curId);m.minutes=null;process(m)}
+function stopRetry(){const m=getM(curId);m.busy=false;process(m)}
+setInterval(()=>{const e=document.getElementById('el');const m=getM(curId);if(e&&m&&m.busy)e.textContent=Math.floor((Date.now()-(m.stepT||Date.now()))/1000)+' ثانیه'},1000);
 function regenM(){const m=getM(curId);m.minutes=null;process(m)}
 function redoAll(){const m=getM(curId);if(!confirm('متن همهٔ بخش‌ها دوباره از صدا ساخته شود؟'))return;m.segs.forEach(s=>s.text=null);m.minutes=null;m.transcript='';process(m)}
 
@@ -260,7 +263,7 @@ function redoAll(){const m=getM(curId);if(!confirm('متن همهٔ بخش‌ه�
 function renameM(){const m=getM(curId);const t=prompt('عنوان جلسه',m.title);if(t&&t.trim()){m.title=t.trim();m.autoTitle='';save();renderDet()}}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;renderDet()});
 function renderStat(){const m=getM(curId);if(!m)return;let h='';
- if(m.busy)h+=`<div class="card"><b>${esc(m.step||'در حال پردازش…')}</b><div class="prog"><i style="width:${m.pct||5}%"></i></div><div class="sub">برنامه را باز نگه دارید تا پردازش تمام شود</div></div>`;
+ if(m.busy)h+=`<div class="card"><b>${esc(m.step||'در حال پردازش…')}</b><div class="prog"><i style="width:${m.pct||5}%"></i></div><div class="sub">زمان این مرحله: <span id="el">0 ثانیه</span> — صفحه را باز و روشن نگه دارید</div><div class="row"><button class="btn sec" onclick="stopRetry()">توقف و تلاش دوباره</button></div></div>`;
  if(m.error)h+=`<div class="msg err">${esc(m.error)}</div><div class="row"><button class="btn" onclick="retryM()">تلاش دوباره (ادامه از همان‌جا)</button></div>`;
  $('#dStat').innerHTML=h}
 function blocks(m){const b=[],x=m.minutes;if(!x)return b;
